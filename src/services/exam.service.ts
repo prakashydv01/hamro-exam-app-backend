@@ -84,7 +84,8 @@ async function startPracticeExam(config: InstanceType<typeof ExamConfig>) {
   const clientQuestions: PracticeClientQuestion[] = questions.map((q) => {
     const optionIds = q.options.map((o) => o.id);
     const orderedIds = config.shuffleOptions ? shuffle(optionIds) : optionIds;
-    const optionsById = new Map(q.options.map((o) => [o.id, o]));
+    const optionsById = new Map<string, (typeof q.options)[number]>();
+    q.options.forEach((option) => optionsById.set(option.id, option));
 
     return {
       questionId: q._id.toString(),
@@ -119,7 +120,7 @@ async function startMockExam(userId: string, config: InstanceType<typeof ExamCon
   }
 
   const perSubjectResults = await Promise.all(
-    config.subjectDistribution.map((sd) => sampleQuestions(sd.subjectId as Types.ObjectId, sd.count))
+    config.subjectDistribution.map((sd: { subjectId: Types.ObjectId; count: number; }) => sampleQuestions(sd.subjectId as Types.ObjectId, sd.count))
   );
   const questions = shuffle(perSubjectResults.flat());
 
@@ -135,16 +136,17 @@ async function startMockExam(userId: string, config: InstanceType<typeof ExamCon
 
   const clientQuestions: MockClientQuestion[] = [];
   const answerSkeletons = questions.map((q) => {
-    const optionIds = q.options.map((o) => o.id);
+    const optionIds = q.options.map((o: { id: any; }) => o.id);
     const orderedIds = config.shuffleOptions ? shuffle(optionIds) : optionIds;
-    const optionsById = new Map(q.options.map((o) => [o.id, o]));
+    const optionsById = new Map<string, (typeof q.options)[number]>();
+    q.options.forEach((option: { id: string; }) => optionsById.set(option.id, option));
 
     clientQuestions.push({
       questionId: q._id.toString(),
       subjectId: q.subjectId.toString(),
       question: q.question,
       imageUrl: q.imageUrl,
-      options: orderedIds.map((id) => {
+      options: orderedIds.map((id: string) => {
         const o = optionsById.get(id)!;
         return { id: o.id, text: o.text, imageUrl: o.imageUrl };
       }),

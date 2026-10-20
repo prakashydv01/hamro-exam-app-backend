@@ -13,7 +13,7 @@ function SubmitButton() {
 }
 
 export default function ExamForm({ faculties, subjects }: { faculties: Faculty[]; subjects: Subject[] }) {
-  const [state, formAction] = useFormState<ActionResult, FormData>(createExamConfig, undefined);
+  const [state, formAction] = useFormState<ActionResult, FormData>(createExamConfig, undefined as unknown as ActionResult);
   const [facultyId, setFacultyId] = useState(faculties[0]?._id ?? '');
   const [examType, setExamType] = useState<'practice' | 'mock'>('practice');
   const [rows, setRows] = useState<{ subjectId: string; count: number }[]>([]);

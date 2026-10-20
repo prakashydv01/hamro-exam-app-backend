@@ -47,7 +47,7 @@ export async function submitAttempt(
   // analytics but never used in scoring.
   const clientAnswerMap = new Map(clientAnswers.map((a) => [a.questionId, a]));
 
-  const questionIds = attempt.answers.map((a) => a.questionId);
+  const questionIds = attempt.answers.map((a: { questionId: any; }) => a.questionId);
   const questions = await Question.find({ _id: { $in: questionIds } }).select(
     'correctOptionId'
   );
@@ -116,7 +116,8 @@ export async function submitAttempt(
 }
 
 export async function getAttemptResult(userId: string, attemptId: string) {
-  const attempt = await Attempt.findOne({ _id: attemptId, userId }).lean();
+  const attemptResult = await Attempt.findOne({ _id: attemptId, userId }).lean();
+  const attempt = Array.isArray(attemptResult) ? attemptResult[0] : attemptResult;
   if (!attempt) throw new ApiError('Attempt not found', 404, 'ATTEMPT_NOT_FOUND');
 
   if (attempt.status === 'in-progress') {
@@ -124,17 +125,17 @@ export async function getAttemptResult(userId: string, attemptId: string) {
   }
 
   // Explanations and correct answers are only revealed here, post-submission.
-  const questionIds = attempt.answers.map((a) => a.questionId);
+  const questionIds = attempt.answers.map((a: { questionId: any; }) => a.questionId);
   const questions = await Question.find({ _id: { $in: questionIds } })
     .select('question imageUrl options correctOptionId explanation subjectId')
     .lean();
-  const questionById = new Map(questions.map((q) => [q._id.toString(), q]));
+  const questionById = new Map(questions.map((q) => [String(q._id), q]));
 
   // Subject-wise breakdown - free to compute since subjectId is already
   // tagged per-answer from exam start time.
   const bySubject = new Map<string, { correct: number; wrong: number; unanswered: number; total: number }>();
 
-  const reviewItems = attempt.answers.map((a) => {
+  const reviewItems = attempt.answers.map((a: { questionId: { toString: () => any; }; subjectId: { toString: () => any; }; isCorrect: boolean; selectedOptionId: any; }) => {
     const q = questionById.get(a.questionId.toString());
     const subjectKey = a.subjectId.toString();
     const bucket = bySubject.get(subjectKey) ?? { correct: 0, wrong: 0, unanswered: 0, total: 0 };
@@ -157,7 +158,7 @@ export async function getAttemptResult(userId: string, attemptId: string) {
   });
 
   return {
-    attemptId: attempt._id.toString(),
+    attemptId: attempt._id as { toString(): string },
     examType: attempt.examType,
     status: attempt.status,
     score: attempt.score,

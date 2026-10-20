@@ -11,7 +11,7 @@ function SubmitButton() {
 }
 
 export default function FacultyForm({ categories }: { categories: CategoryOption[] }) {
-  const [state, formAction] = useFormState<ActionResult, FormData>(createFaculty, undefined);
+  const [state, formAction] = useFormState<ActionResult | undefined, FormData>(createFaculty, undefined);
 
   return (
     <form action={formAction} className="inline-form">

@@ -11,12 +11,12 @@ export default async function QuestionsPage({ searchParams }: Props) {
   await connectDB();
 
   const faculties = await Faculty.find({ isActive: true }).sort({ name: 1 }).lean();
-  const activeFacultyId = searchParams.facultyId || faculties[0]?._id.toString();
+  const activeFacultyId = searchParams.facultyId || (faculties[0]?._id as { toString(): string } | undefined)?.toString();
 
   const subjects = activeFacultyId
     ? await Subject.find({ facultyId: activeFacultyId, isActive: true }).sort({ name: 1 }).lean()
     : [];
-  const activeSubjectId = searchParams.subjectId || subjects[0]?._id.toString();
+  const activeSubjectId = searchParams.subjectId || (subjects[0]?._id as { toString(): string } | undefined)?.toString();
 
   const questions = activeSubjectId
     ? await Question.find({ subjectId: activeSubjectId }).sort({ createdAt: -1 }).limit(100).lean()

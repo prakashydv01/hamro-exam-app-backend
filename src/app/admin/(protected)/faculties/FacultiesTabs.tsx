@@ -112,7 +112,7 @@ function EditFacultyRow({
   onDone: () => void;
 }) {
   const boundUpdate = updateFaculty.bind(null, faculty._id);
-  const [state, formAction] = useFormState<ActionResult, FormData>(boundUpdate, undefined);
+  const [state, formAction] = useFormState<ActionResult | undefined, FormData>(boundUpdate, undefined);
 
   useEffect(() => {
     if (state?.success) onDone();

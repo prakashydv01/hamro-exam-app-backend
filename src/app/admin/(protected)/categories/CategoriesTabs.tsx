@@ -95,7 +95,7 @@ function EditSubmitButton() {
 
 function EditCategoryRow({ category, onDone }: { category: CategoryRow; onDone: () => void }) {
   const boundUpdate = updateCategory.bind(null, category._id);
-  const [state, formAction] = useFormState<ActionResult, FormData>(boundUpdate, undefined);
+  const [state, formAction] = useFormState<ActionResult, FormData>(boundUpdate, {} as ActionResult);
 
   useEffect(() => {
     if (state?.success) onDone();

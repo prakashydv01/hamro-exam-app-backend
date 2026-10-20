@@ -9,7 +9,7 @@ function SubmitButton() {
 }
 
 export default function QuestionForm({ subjects }: { subjects: { _id: string; name: string }[] }) {
-  const [state, formAction] = useFormState<ActionResult, FormData>(createQuestion, undefined);
+  const [state, formAction] = useFormState<ActionResult, FormData>(createQuestion, {});
 
   return (
     <form action={formAction}>

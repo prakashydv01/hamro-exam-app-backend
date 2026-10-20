@@ -107,7 +107,7 @@ function SubmitButton({ label, pendingLabel }: { label: string; pendingLabel: st
 }
 
 function AddSubjectForm({ faculties }: { faculties: FacultyOption[] }) {
-  const [state, formAction] = useFormState<ActionResult, FormData>(createSubject, undefined);
+  const [state, formAction] = useFormState<ActionResult, FormData>(createSubject, {});
 
   return (
     <form action={formAction} className="inline-form">
@@ -144,7 +144,7 @@ function EditSubjectRow({
   onDone: () => void;
 }) {
   const boundUpdate = updateSubject.bind(null, subject._id);
-  const [state, formAction] = useFormState<ActionResult, FormData>(boundUpdate, undefined);
+  const [state, formAction] = useFormState<ActionResult, FormData>(boundUpdate, {});
 
   useEffect(() => {
     if (state?.success) onDone();

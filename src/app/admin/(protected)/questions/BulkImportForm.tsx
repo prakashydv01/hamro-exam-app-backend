@@ -20,7 +20,7 @@ function SubmitButton() {
 }
 
 export default function BulkImportForm({ subjects }: { subjects: { _id: string; name: string }[] }) {
-  const [state, formAction] = useFormState<ActionResult, FormData>(bulkImportQuestions, undefined);
+  const [state, formAction] = useFormState<ActionResult, FormData>(bulkImportQuestions, {});
 
   return (
     <form action={formAction}>

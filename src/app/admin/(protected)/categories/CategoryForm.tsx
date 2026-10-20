@@ -9,7 +9,10 @@ function SubmitButton() {
 }
 
 export default function CategoryForm() {
-  const [state, formAction] = useFormState<ActionResult, FormData>(createCategory, undefined);
+  const [state, formAction] = useFormState<ActionResult, FormData>(
+    createCategory,
+    undefined as unknown as ActionResult,
+  );
 
   return (
     <form action={formAction} className="inline-form">

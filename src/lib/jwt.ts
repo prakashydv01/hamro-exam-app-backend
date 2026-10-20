@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import type { SignOptions } from 'jsonwebtoken';
 
 export interface AccessTokenPayload {
   userId: string;
@@ -12,7 +13,9 @@ const ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '30m';
 const REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
 
 export function signAccessToken(payload: AccessTokenPayload): string {
-  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRES_IN });
+  return jwt.sign(payload, ACCESS_SECRET, {
+    expiresIn: ACCESS_EXPIRES_IN as SignOptions['expiresIn'],
+  });
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
@@ -31,7 +34,9 @@ export interface RefreshTokenPayload {
 }
 
 export function signRefreshToken(payload: RefreshTokenPayload): string {
-  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES_IN });
+  return jwt.sign(payload, REFRESH_SECRET, {
+    expiresIn: REFRESH_EXPIRES_IN as SignOptions['expiresIn'],
+  });
 }
 
 export function verifyRefreshToken(token: string): RefreshTokenPayload {
