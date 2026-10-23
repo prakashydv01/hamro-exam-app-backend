@@ -11,15 +11,17 @@ export default async function QuestionsPage({ searchParams }: Props) {
   await connectDB();
 
   const faculties = await Faculty.find({ isActive: true }).sort({ name: 1 }).lean();
-  const activeFacultyId = searchParams.facultyId || (faculties[0]?._id as { toString(): string } | undefined)?.toString();
+  const firstFaculty = faculties[0] as { _id: { toString(): string } } | undefined;
+  const activeFacultyId = searchParams.facultyId || firstFaculty?._id.toString();
 
   const subjects = activeFacultyId
     ? await Subject.find({ facultyId: activeFacultyId, isActive: true }).sort({ name: 1 }).lean()
     : [];
-  const activeSubjectId = searchParams.subjectId || (subjects[0]?._id as { toString(): string } | undefined)?.toString();
+  const firstSubject = subjects[0] as { _id: { toString(): string } } | undefined;
+  const activeSubjectId = searchParams.subjectId || firstSubject?._id.toString();
 
   const questions = activeSubjectId
-    ? await Question.find({ subjectId: activeSubjectId }).sort({ createdAt: -1 }).limit(100).lean()
+    ? await Question.find({ subjectId: activeSubjectId }).sort({ createdAt: -1 }).limit(2000).lean()
     : [];
 
   if (faculties.length === 0) {
@@ -44,6 +46,7 @@ export default async function QuestionsPage({ searchParams }: Props) {
     chapter: (q.chapter as string) ?? null,
     difficulty: q.difficulty as string,
     isActive: q.isActive as boolean,
+    createdAt: q.createdAt ? new Date(q.createdAt).toISOString() : null,
   }));
 
   return (

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import mongoose from 'mongoose';
 import { connectDB } from '@/lib/mongodb';
 import Question from '@/models/Question';
 import { Subject } from '@/models/Taxonomy';
@@ -155,4 +156,20 @@ export async function deleteQuestion(id: string) {
   await connectDB();
   await Question.findByIdAndDelete(id);
   revalidatePath('/admin/questions');
+}
+
+/**
+ * Delete many questions at once (used by the checkbox selection in the
+ * Questions tab, including "select all" and "select by date").
+ */
+export async function deleteQuestionsBulk(ids: string[]): Promise<ActionResult> {
+  await connectDB();
+
+  const valid = Array.from(new Set(ids)).filter((id) => mongoose.Types.ObjectId.isValid(id));
+  if (valid.length === 0) return { error: 'No questions selected' };
+  if (valid.length > 5000) return { error: 'Too many selected at once (max 5000)' };
+
+  const res = await Question.deleteMany({ _id: { $in: valid } });
+  revalidatePath('/admin/questions');
+  return { success: `Deleted ${res.deletedCount} question${res.deletedCount === 1 ? '' : 's'}` };
 }
