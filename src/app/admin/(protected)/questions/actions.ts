@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/mongodb';
 import Question from '@/models/Question';
 import { Subject } from '@/models/Taxonomy';
 import { bulkQuestionImportSchema } from '@/lib/validation';
+import { parseLenientJson } from '@/lib/lenientJson';
 
 export interface ActionResult {
   error?: string;
@@ -100,7 +101,8 @@ export async function bulkImportQuestions(
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(rawJson);
+    // Lenient: accepts LaTeX with single backslashes (\frac) as well as properly escaped (\\frac)
+    parsed = parseLenientJson(rawJson);
   } catch {
     return { error: 'Invalid JSON - please check the syntax' };
   }

@@ -11,6 +11,31 @@ const EXAMPLE = `[
     "difficulty": "easy",
     "chapter": "preposition",
     "explanation": "The correct preposition to use with 'good' when referring to a skill or activity is 'at'."
+  },
+  {
+    "question": "If $f(x) = x^2 - 4x + 3$, find the value of $f(2)$.",
+    "options": ["$-1$", "$0$", "$1$", "$3$"],
+    "correctAnswer": 0,
+    "chapter": "functions",
+    "explanation": "$f(2) = 2^2 - 4(2) + 3 = -1$"
+  },
+  {
+    "question": "Evaluate $$\\int_0^1 x^2\\,dx$$",
+    "options": ["$\\frac{1}{2}$", "$\\frac{1}{3}$", "$\\frac{1}{4}$", "$1$"],
+    "correctAnswer": 1,
+    "chapter": "calculus"
+  },
+  {
+    "question": "Which option shows the correct mirror image of the given figure?",
+    "imageUrl": "https://your-host.com/q45-stem.png",
+    "options": [
+      { "imageUrl": "https://your-host.com/q45-option-a.png" },
+      { "imageUrl": "https://your-host.com/q45-option-b.png" },
+      { "imageUrl": "https://your-host.com/q45-option-c.png" },
+      { "imageUrl": "https://your-host.com/q45-option-d.png" }
+    ],
+    "correctAnswer": 1,
+    "chapter": "non-verbal reasoning"
   }
 ]`;
 
@@ -33,9 +58,18 @@ export default function BulkImportForm({ subjects }: { subjects: { _id: string; 
         </select>
       </div>
 
+      <p className="muted" style={{ marginBottom: 10 }}>
+        Each option in the array can be a plain string (text-only), or an object like{' '}
+        <code>{'{ "imageUrl": "...", "text": "optional" }'}</code> for image-based options
+        (mirror images, sequences, matrices).{' '}
+        <b>Math:</b> wrap LaTeX in <code>$...$</code> (inline) or <code>$$...$$</code> (own line), e.g.{' '}
+        <code>{'"$\\frac{1}{2}$"'}</code>. Single backslashes are fine - they are fixed automatically.
+        Write a literal dollar sign as <code>\$</code>.
+      </p>
+
       <div className="field" style={{ marginBottom: 10 }}>
         <label htmlFor="bulkJson">Questions JSON (array)</label>
-        <textarea id="bulkJson" name="bulkJson" placeholder={EXAMPLE} />
+        <textarea id="bulkJson" name="bulkJson" placeholder={EXAMPLE} style={{ minHeight: 280 }} />
       </div>
 
       <SubmitButton />
