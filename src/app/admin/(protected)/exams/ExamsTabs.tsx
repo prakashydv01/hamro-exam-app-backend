@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toggleExamActive, deleteExamConfig } from './actions';
-import ExamForm from './ExamForm';
+import ExamForm, { type ChapterOption } from './ExamForm';
 
 type Tab = 'view' | 'create';
 
@@ -25,9 +25,10 @@ interface ExamsTabsProps {
   exams: ExamRow[];
   faculties: FacultyOption[];
   subjects: SubjectOption[];
+  chapters: ChapterOption[];
 }
 
-export default function ExamsTabs({ exams, faculties, subjects }: ExamsTabsProps) {
+export default function ExamsTabs({ exams, faculties, subjects, chapters }: ExamsTabsProps) {
   const [tab, setTab] = useState<Tab>('view');
 
   return (
@@ -49,7 +50,7 @@ export default function ExamsTabs({ exams, faculties, subjects }: ExamsTabsProps
                 <th>Title</th>
                 <th>Faculty</th>
                 <th>Type</th>
-                <th>Subjects</th>
+                <th>Subject / Chapter</th>
                 <th>Questions</th>
                 <th>Duration</th>
                 <th>Marking</th>
@@ -99,7 +100,7 @@ export default function ExamsTabs({ exams, faculties, subjects }: ExamsTabsProps
           {faculties.length === 0 ? (
             <p className="muted">Add a faculty and subjects first.</p>
           ) : (
-            <ExamForm faculties={faculties} subjects={subjects} />
+            <ExamForm faculties={faculties} subjects={subjects} chapters={chapters} />
           )}
         </div>
       )}

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { connectDB } from '@/lib/mongodb';
 import ExamConfig from '@/models/ExamConfig';
+import Question from '@/models/Question';
 
 export interface ActionResult {
   error?: string;
@@ -31,8 +32,24 @@ export async function createExamConfig(
     if (examType === 'practice') {
       const subjectId = formData.get('subjectId') as string;
       const totalQuestions = Number(formData.get('totalQuestions'));
+      const chapterWise = formData.get('chapterWise') === 'on';
       if (!subjectId || !totalQuestions) {
         return { error: 'Subject and total questions are required for practice exams' };
+      }
+
+      if (chapterWise) {
+        const chapterCount = (await Question.distinct('chapter', { subjectId, isActive: true, chapter: { $nin: [null, ''] } })).length;
+        if (chapterCount === 0) {
+          return { error: 'This subject has no chapters yet - add a "chapter" to its questions, or untick Chapter-wise.' };
+        }
+      } else {
+        // Whole-subject practice: make sure the exam can actually be started later.
+        const available = await Question.countDocuments({ subjectId, isActive: true });
+        if (available < totalQuestions) {
+          return {
+            error: `Only ${available} active question${available === 1 ? '' : 's'} in this subject - need ${totalQuestions}. Lower the total or add questions first.`,
+          };
+        }
       }
 
       await ExamConfig.create({
@@ -40,6 +57,7 @@ export async function createExamConfig(
         examType,
         title,
         subjectId,
+        chapterWise,
         totalQuestions,
         duration,
         correctMarks,

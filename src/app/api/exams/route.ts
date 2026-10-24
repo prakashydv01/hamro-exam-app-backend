@@ -23,7 +23,7 @@ export const GET = withErrorHandling(async (req: Request) => {
   // subjectId is populated (practice exams only) so the app can list/start
   // practice directly by subject name without a separate lookup.
   const exams = await ExamConfig.find(filter)
-    .select('title examType duration totalQuestions correctMarks negativeMarks subjectDistribution subjectId')
+    .select('title examType duration totalQuestions correctMarks negativeMarks subjectDistribution subjectId chapterWise')
     .populate('subjectId', 'name')
     .lean();
 

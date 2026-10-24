@@ -9,8 +9,8 @@ export const POST = withErrorHandling(async (req: Request) => {
   const authUser = getAuthUser(req);
   requireVerified(authUser);
 
-  const { examId } = parseOrThrow(startExamSchema, await req.json());
-  const result = await startExam(authUser.userId, examId);
+  const { examId, chapter } = parseOrThrow(startExamSchema, await req.json());
+  const result = await startExam(authUser.userId, examId, chapter);
 
   // This single response contains everything the app needs to run the
   // entire exam locally - no further API calls until submit.

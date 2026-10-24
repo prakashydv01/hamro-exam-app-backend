@@ -17,9 +17,11 @@ function shuffle<T>(arr: T[]): T[] {
 /** Pulls `count` random active questions for a subject via $sample - avoids
  * loading the whole collection into memory, and stays fast even with a
  * huge question bank. */
-async function sampleQuestions(subjectId: Types.ObjectId, count: number): Promise<IQuestion[]> {
+async function sampleQuestions(subjectId: Types.ObjectId, count: number, chapter?: string): Promise<IQuestion[]> {
+  const match: Record<string, unknown> = { subjectId, isActive: true };
+  if (chapter) match.chapter = chapter; // chapter-wise practice
   const docs = await Question.aggregate([
-    { $match: { subjectId, isActive: true } },
+    { $match: match },
     { $sample: { size: count } },
   ]);
   return docs as IQuestion[];
@@ -50,12 +52,12 @@ interface PracticeClientQuestion extends MockClientQuestion {
   explanation?: string;
 }
 
-export async function startExam(userId: string, examId: string) {
+export async function startExam(userId: string, examId: string, chapter?: string) {
   const config = await ExamConfig.findOne({ _id: examId, isActive: true });
   if (!config) throw new ApiError('Exam not found or inactive', 404, 'EXAM_NOT_FOUND');
 
   if (config.examType === 'practice') {
-    return startPracticeExam(config);
+    return startPracticeExam(config, chapter);
   }
   return startMockExam(userId, config);
 }
@@ -68,12 +70,20 @@ export async function startExam(userId: string, examId: string) {
  * affect any leaderboard, and can be retaken freely with fresh random
  * questions every time.
  */
-async function startPracticeExam(config: InstanceType<typeof ExamConfig>) {
+async function startPracticeExam(config: InstanceType<typeof ExamConfig>, requestedChapter?: string) {
   if (!config.subjectId) throw new ApiError('Malformed practice exam config', 500);
 
-  const questions = await sampleQuestions(config.subjectId as Types.ObjectId, config.totalQuestions);
+  // Chapter-wise practice: only honoured when the exam is flagged chapterWise.
+  const chapter = config.chapterWise && requestedChapter ? requestedChapter.trim() : undefined;
 
-  if (questions.length < config.totalQuestions) {
+  const questions = await sampleQuestions(config.subjectId as Types.ObjectId, config.totalQuestions, chapter);
+
+  if (chapter) {
+    // A chapter may simply have fewer questions than the exam's total - use what exists.
+    if (questions.length === 0) {
+      throw new ApiError('No questions available in this chapter yet.', 409, 'INSUFFICIENT_QUESTIONS');
+    }
+  } else if (questions.length < config.totalQuestions) {
     throw new ApiError(
       `Not enough active questions available (need ${config.totalQuestions}, have ${questions.length}). Please contact support.`,
       409,
@@ -84,8 +94,7 @@ async function startPracticeExam(config: InstanceType<typeof ExamConfig>) {
   const clientQuestions: PracticeClientQuestion[] = questions.map((q) => {
     const optionIds = q.options.map((o) => o.id);
     const orderedIds = config.shuffleOptions ? shuffle(optionIds) : optionIds;
-    const optionsById = new Map<string, (typeof q.options)[number]>();
-    q.options.forEach((option) => optionsById.set(option.id, option));
+    const optionsById = new Map<string, (typeof q.options)[number]>(q.options.map((o) => [o.id, o]));
 
     return {
       questionId: q._id.toString(),
@@ -106,7 +115,7 @@ async function startPracticeExam(config: InstanceType<typeof ExamConfig>) {
     examType: 'practice' as const,
     title: config.title,
     duration: config.duration, // unused by the client for practice, kept for consistency
-    totalQuestions: config.totalQuestions,
+    totalQuestions: questions.length,
     startedAt: new Date().toISOString(),
     questions: clientQuestions,
   };
@@ -138,8 +147,9 @@ async function startMockExam(userId: string, config: InstanceType<typeof ExamCon
   const answerSkeletons = questions.map((q) => {
     const optionIds = q.options.map((o: { id: any; }) => o.id);
     const orderedIds = config.shuffleOptions ? shuffle(optionIds) : optionIds;
-    const optionsById = new Map<string, (typeof q.options)[number]>();
-    q.options.forEach((option: { id: string; }) => optionsById.set(option.id, option));
+    const optionsById = new Map<string, (typeof q.options)[number]>(
+      q.options.map((o: { id: any; }) => [o.id, o])
+    );
 
     clientQuestions.push({
       questionId: q._id.toString(),

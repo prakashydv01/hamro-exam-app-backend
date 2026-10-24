@@ -129,7 +129,7 @@ export async function bulkImportQuestions(
     return {
       facultyId: subject.facultyId,
       subjectId,
-      chapter: item.chapter,
+      chapter: item.chapter?.trim() || undefined,
       question: item.question,
       imageUrl: item.imageUrl,
       options,

@@ -43,6 +43,8 @@ export const resetPasswordSchema = z.object({
 
 export const startExamSchema = z.object({
   examId: z.string().min(1),
+  // Optional - only used by chapter-wise practice exams.
+  chapter: z.string().trim().max(200).optional(),
 });
 
 export const submitAnswerSchema = z.object({

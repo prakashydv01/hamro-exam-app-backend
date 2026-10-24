@@ -6,19 +6,39 @@ import { createExamConfig, type ActionResult } from './actions';
 
 interface Faculty { _id: string; name: string }
 interface Subject { _id: string; name: string; facultyId: string }
+export interface ChapterOption { subjectId: string; chapter: string; count: number }
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return <button type="submit" disabled={pending}>{pending ? 'Saving…' : 'Create exam'}</button>;
 }
 
-export default function ExamForm({ faculties, subjects }: { faculties: Faculty[]; subjects: Subject[] }) {
-  const [state, formAction] = useFormState<ActionResult, FormData>(createExamConfig, undefined as unknown as ActionResult);
+export default function ExamForm({
+  faculties,
+  subjects,
+  chapters,
+}: {
+  faculties: Faculty[];
+  subjects: Subject[];
+  chapters: ChapterOption[];
+}) {
+  const [state, formAction] = useFormState<ActionResult, FormData>(createExamConfig, {});
   const [facultyId, setFacultyId] = useState(faculties[0]?._id ?? '');
   const [examType, setExamType] = useState<'practice' | 'mock'>('practice');
   const [rows, setRows] = useState<{ subjectId: string; count: number }[]>([]);
 
+  const [practiceSubjectId, setPracticeSubjectId] = useState('');
+  const [chapterWise, setChapterWise] = useState(false);
+  const [totalQuestions, setTotalQuestions] = useState(10);
+
   const subjectsForFaculty = subjects.filter((s) => s.facultyId === facultyId);
+
+  // Practice: the selected subject (falls back to the first one when faculty changes)
+  const activeSubjectId = subjectsForFaculty.some((s) => s._id === practiceSubjectId)
+    ? practiceSubjectId
+    : subjectsForFaculty[0]?._id ?? '';
+  const chaptersForSubject = chapters.filter((c) => c.subjectId === activeSubjectId);
+  const subjectTotal = chaptersForSubject.reduce((sum, c) => sum + c.count, 0);
 
   function addRow() {
     if (subjectsForFaculty.length === 0) return;
@@ -64,7 +84,7 @@ export default function ExamForm({ faculties, subjects }: { faculties: Faculty[]
           value={examType}
           onChange={(e) => setExamType(e.target.value as 'practice' | 'mock')}
         >
-          <option value="practice">Practice (single subject)</option>
+          <option value="practice">Practice (one subject or chapter)</option>
           <option value="mock">Mock test (cross-subject)</option>
         </select>
       </div>
@@ -73,15 +93,46 @@ export default function ExamForm({ faculties, subjects }: { faculties: Faculty[]
         <>
           <div className="field" style={{ marginBottom: 10 }}>
             <label htmlFor="subjectId">Subject</label>
-            <select id="subjectId" name="subjectId">
+            <select
+              id="subjectId"
+              name="subjectId"
+              value={activeSubjectId}
+              onChange={(e) => setPracticeSubjectId(e.target.value)}
+            >
               {subjectsForFaculty.map((s) => (
                 <option key={s._id} value={s._id}>{s.name}</option>
               ))}
             </select>
           </div>
+          <div className="field" style={{ marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <input
+              id="chapterWise"
+              name="chapterWise"
+              type="checkbox"
+              checked={chapterWise}
+              onChange={(e) => setChapterWise(e.target.checked)}
+            />
+            <label htmlFor="chapterWise" style={{ margin: 0 }}>
+              Chapter-wise - students pick a chapter before practicing
+            </label>
+          </div>
+          {chapterWise && (
+            <p className="muted" style={{ marginTop: -4, marginBottom: 10 }}>
+              {chaptersForSubject.length === 0
+                ? 'No chapters found for this subject yet - add a "chapter" to its questions first.'
+                : `Chapters from your questions: ${chaptersForSubject.map((c) => `${c.chapter} (${c.count})`).join(', ')}. If a chapter has fewer questions than the total below, all of its questions are used.`}
+            </p>
+          )}
           <div className="field" style={{ marginBottom: 10 }}>
             <label htmlFor="totalQuestions">Total questions</label>
-            <input id="totalQuestions" name="totalQuestions" type="number" min={1} defaultValue={10} />
+            <input
+              id="totalQuestions"
+              name="totalQuestions"
+              type="number"
+              min={1}
+              value={totalQuestions}
+              onChange={(e) => setTotalQuestions(Number(e.target.value))}
+            />
           </div>
         </>
       ) : (

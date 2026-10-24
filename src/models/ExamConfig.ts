@@ -12,6 +12,10 @@ export interface IExamConfig extends Document {
 
   // practice only - single subject, questions pulled from it
   subjectId?: Types.ObjectId;
+  // practice only - when true the app lists the subject's chapters (taken from
+  // Question.chapter) and the student picks one. When false, practice starts
+  // straight away with questions from the whole subject.
+  chapterWise?: boolean;
 
   // mock only - composed across multiple subjects
   subjectDistribution?: ISubjectDistribution[];
@@ -38,6 +42,7 @@ const ExamConfigSchema = new Schema<IExamConfig>({
   title: { type: String, required: true },
 
   subjectId: { type: Schema.Types.ObjectId, ref: 'Subject' },
+  chapterWise: { type: Boolean, default: false },
   subjectDistribution: { type: [SubjectDistributionSchema] },
 
   totalQuestions: { type: Number, required: true },
